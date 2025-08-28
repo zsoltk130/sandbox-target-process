@@ -14,6 +14,10 @@ int gInt;
 float gFloat;
 double gDouble;
 char gString[6]; // Up to 5 chars + null terminator
+constexpr int NUM_DUMMIES = 5;
+int gIntDummies[NUM_DUMMIES]; // Dummy integers
+int* gIntPtrs[NUM_DUMMIES]; // Pointers to all dummy integers
+int gIntRealIdx = 0; // Index of the real integer in the dummies array
 
 // Helper functions
 int randomInt() { return rand() % 100000; }
@@ -28,8 +32,17 @@ std::string randomString() {
     return s;
 }
 
+// Update generateValues() to randomize the real index and assign values
 void generateValues() {
-    gInt = randomInt();
+    int randInt = randomInt();
+	gIntRealIdx = rand() % NUM_DUMMIES; // Randomize the index of the real integer
+    
+    for (int i = 0; i < NUM_DUMMIES; ++i) {
+        gIntDummies[i] = randInt;
+		gIntPtrs[i] = &gIntDummies[i]; // Store pointers to all dummies
+    }
+    gInt = gIntDummies[gIntRealIdx]; // For compatibility with old code
+
     gFloat = randomFloat();
     gDouble = randomDouble();
     std::string s = randomString();
@@ -37,10 +50,16 @@ void generateValues() {
     gString[sizeof(gString) - 1] = '\0';
 }
 
-// Get variable details
+// Update collectInfo() to include all dummy addresses
 std::vector<TestVar> collectInfo() {
     std::vector<TestVar> vars;
-    vars.push_back({ "Integer", &gInt, std::to_string(gInt) });
+    for (int i = 0; i < NUM_DUMMIES; ++i) {
+        vars.push_back({
+            (i == gIntRealIdx ? "Integer (real)" : "Integer (dummy)"),
+            gIntPtrs[i],
+            std::to_string(*gIntPtrs[i])
+            });
+    }
     vars.push_back({ "Float", &gFloat, std::to_string(gFloat) });
     vars.push_back({ "Double", &gDouble, std::to_string(gDouble) });
     vars.push_back({ "String", gString, std::string(gString) });
